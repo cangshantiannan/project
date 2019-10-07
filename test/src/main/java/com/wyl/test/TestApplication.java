@@ -1,4 +1,4 @@
-package com.wyl.aop;
+package com.wyl.test;
 /**
  * @Author wangyl
  * @E-mail wangyl@dsgdata.com
@@ -15,8 +15,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Date: 2019/9/22 18:36
  */
 @SpringBootApplication
-public class AopApplication {
+public class TestApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AopApplication.class, args);
+        SpringApplication.run(TestApplication.class, args);
     }
 }

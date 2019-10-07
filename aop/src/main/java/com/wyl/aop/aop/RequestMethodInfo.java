@@ -15,8 +15,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.net.UnknownHostException;
@@ -32,10 +30,11 @@ import java.net.UnknownHostException;
 @Component
 public class RequestMethodInfo {
     public Logger logger = LoggerFactory.getLogger(RequestMethodInfo.class);
-
-    @Pointcut("execution(public * com.wyl.aop.controller.*.*(..)) ")
+//    @Pointcut("@annotation(com.wyl.aop.annotation.RequestInfo) ")
+    @Pointcut("execution (* com.wyl.test.controller..*.*(..))")
     public void MethodInfo() {
         logger.info("get Method Info");
+        System.out.println(111);
     }
 
     /**
@@ -48,15 +47,15 @@ public class RequestMethodInfo {
      */
     @Before("MethodInfo()")
     public void BeforeMethodInfo(JoinPoint joinPoint) throws UnknownHostException {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        User user = (User) session.getAttribute("SPRING_SECURITY_CONTEXT");
-        if(user!=null)
-        {
-            logger.info("username is {}",user.getUsername());
-        }
-        String ip = RequestTools.REQUEST.GetRequestIp(request);
-        logger.info("remort ip is {}",ip);
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        User user = (User) session.getAttribute("SPRING_SECURITY_CONTEXT");
+//        if(user!=null)
+//        {
+//            logger.info("username is {}",user.getUsername());
+//        }
+//        String ip = RequestTools.REQUEST.GetRequestIp(request);
+        logger.info("remort ip is {}","10");
     }
 
     /**

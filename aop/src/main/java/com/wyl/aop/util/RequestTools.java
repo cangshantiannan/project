@@ -4,8 +4,6 @@
  **/
 package com.wyl.aop.util;
 
-import org.springframework.util.StringUtils;
-
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -28,8 +26,7 @@ public enum RequestTools {
         if (request.getHeader(X_FORWARDED_FOR) == null) {
             ip = request.getRemoteAddr();
             if (ip.equals(LOCALHOST)) {
-                InetAddress inet = InetAddress.getLocalHost();
-                ip = inet.getHostAddress();
+                return ip;
             }
         } else {
             ip = request.getHeader(X_FORWARDED_FOR);
