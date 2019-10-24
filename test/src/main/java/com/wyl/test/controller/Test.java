@@ -5,10 +5,9 @@
 package com.wyl.test.controller;
 
 import com.wyl.aop.annotation.RequestInfo;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import wyl.test.conf.ExampleService;
 
 /**
  * @author wyl
@@ -21,9 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/Test")
 @CrossOrigin
 public class Test {
-    @GetMapping(value = "/1")
+
+    @Autowired
+    private ExampleService exampleService;
+
+    @GetMapping(value = "/1/{word}")
     @RequestInfo
-    public String queryAllADAMJsonModuleInfo() {
-        return "ok";
+    public String queryAllADAMJsonModuleInfo(@PathVariable String word) {
+        return exampleService.wrap(word);
     }
 }
