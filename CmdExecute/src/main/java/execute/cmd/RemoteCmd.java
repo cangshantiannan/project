@@ -4,22 +4,22 @@
  **/
 package execute.cmd;
 
+import ch.ethz.ssh2.ChannelCondition;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 import com.sun.org.apache.xml.internal.security.Init;
 import com.sun.org.apache.xpath.internal.operations.Bool;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import sun.plugin.javascript.navig.Array;
 import sun.plugin.javascript.navig.LinkArray;
 import until.IOTools;
 
 import java.beans.IntrospectionException;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author wyl
@@ -65,7 +65,7 @@ public class RemoteCmd {
      * @return
      * @Date 2019/10/25 1:07
      * @Author wangyl
-     * @Version  V1.0
+     * @Version V1.0
      */
     public RemoteCmd(String host, String userName, String passWord, Integer port) {
         this.host = host;
@@ -83,7 +83,7 @@ public class RemoteCmd {
      * @return
      * @Date 2019/10/25 1:08
      * @Author wangyl
-     * @Version  V1.0
+     * @Version V1.0
      */
     public RemoteCmd(String host, String userName, String passWord) {
         this(host, userName, passWord, 22);
@@ -114,7 +114,7 @@ public class RemoteCmd {
     }
 
     /**
-     * @Description 执行多个命令 如果有命令失败 则终止接下来的命令
+     * @Description 执行多个命令 每个命令没有关联 如果有命令失败 则终止接下来的命令
      * @return java.util.List<execute.cmd.CmdRes>
      * @Date 2019/10/24 23:52
      * @Author wangyl
@@ -139,6 +139,49 @@ public class RemoteCmd {
         return cmdResList;
     }
 
+
+    /**
+     * @Description 类似shell命令交互 用exit退出函数
+     * @param
+     * @return void
+     * @Date 2019/10/27 23:42
+     * @Author wangyl
+     * @Version V1.0
+     */
+    public void cmdsLikeShell() throws IOException, InterruptedException {
+        this.openConnection();
+        session.requestDumbPTY();
+        session.startShell();
+        PrintWriter pw = new PrintWriter(session.getStdin());
+        InputStream outInfo = session.getStdout();
+
+        OutAndInThread outThread = new OutAndInThread();
+        OutAndInThread inThread = new OutAndInThread();
+        outThread.setOutInfo(outInfo);
+        inThread.setInInfo(pw);
+        outThread.start();
+        inThread.start();
+//        BufferedReader buffer = new BufferedReader(new InputStreamReader(outInfo));
+//        String outInfoLine = "";
+//        while (true) {
+//            Scanner input = new Scanner(System.in);
+//            System.out.println("请输入命令:");
+//            String cmd = input.nextLine();
+//            pw.println(cmd);
+//            pw.flush();
+//            while (true) {
+//                if ((outInfoLine = buffer.readLine()) == null || outInfoLine.endsWith("]# ")) {
+//                    break;
+//                }
+//                System.out.println(outInfoLine);
+//            }
+//            if ("exit".equals(cmd)) {
+//                pw.close();
+//                break;
+//            }
+//        }
+    }
+
     /**
      * @Description 开启连接
      * @return void
@@ -157,5 +200,63 @@ public class RemoteCmd {
         }
         session = conn.openSession();
     }
+
+}
+
+@Data
+class OutAndInThread extends Thread {
+    private InputStream outInfo;
+    private PrintWriter inInfo;
+
+    public OutAndInThread() {
+    }
+
+    @Override
+    public void run() {
+        if(outInfo==null)
+        {
+            try {
+                inInfoThread();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            try {
+                outInfoThread();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void outInfoThread() throws IOException {
+        @NonNull InputStream outInfo = this.outInfo;
+        BufferedReader buffer = new BufferedReader(new InputStreamReader(outInfo));
+        String line = "";
+        while (true) {
+            if ((line = buffer.readLine()) == null) {
+                break;
+            }
+            System.out.println(line);
+        }
+    }
+
+    private void inInfoThread() throws IOException {
+        @NonNull PrintWriter inInfo = this.inInfo;
+        while (true) {
+            Scanner input = new Scanner(System.in);
+            System.out.println("请输入命令:");
+            String cmd = input.nextLine();
+            inInfo.println(cmd);
+            inInfo.flush();
+            if ("exit".equals(cmd)) {
+                inInfo.close();
+                break;
+            }
+        }
+    }
+
 
 }
