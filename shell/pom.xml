@@ -28,7 +28,7 @@
         </dependency>
         <dependency>
             <groupId>com.wyl</groupId>
-            <artifactId>CmdExecute</artifactId>
+            <artifactId>SystemTools</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

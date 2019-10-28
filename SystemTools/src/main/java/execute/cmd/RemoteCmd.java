@@ -6,9 +6,10 @@ package execute.cmd;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
+import constant.Constant;
 import lombok.Data;
 import lombok.NonNull;
-import until.IOTools;
+import util.IOTools;
 
 import java.beans.IntrospectionException;
 import java.io.*;
@@ -31,6 +32,9 @@ public class RemoteCmd {
      * 连接
      */
     Connection conn = null;
+    /**
+     *执行命令的session
+     */
     Session session = null;
     /**
      * 远程地址
@@ -93,7 +97,7 @@ public class RemoteCmd {
      * @Author wangyl
      * @Version V1.0
      */
-    public CmdRes executeCmd(String cmd) throws IOException, IllegalAccessException, IntrospectionException, InvocationTargetException {
+    public CmdRes executeCmd(String cmd) throws IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
         try {
             this.openConnection();
             session.execCommand(cmd);
@@ -128,7 +132,7 @@ public class RemoteCmd {
                     break;
                 }
             }
-            catch (IOException | IllegalAccessException | IntrospectionException | InvocationTargetException e) {
+            catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException e) {
                 CmdRes cmdres = CmdRes.builder().cmd(cmd).cmdExecuteStatue(-1).outInfo(Arrays.asList(IOTools.TOOLS.getExceptionToString(e))).build();
                 cmdResList.add(cmdres);
             }
@@ -151,7 +155,7 @@ public class RemoteCmd {
         PrintWriter pw = new PrintWriter(session.getStdin());
         InputStream outInfo = session.getStdout();
         BufferedReader buffer = new BufferedReader(new InputStreamReader(outInfo));
-        String outInfoLine = "";
+        String outInfoLine = null;
         while (true) {
             Scanner input = new Scanner(System.in);
             System.out.println("请输入命令:");
@@ -171,7 +175,15 @@ public class RemoteCmd {
         }
     }
 
-    public List<CmdRes> executeCmdsLikeShell(List<String> cmds) throws IOException {
+    /**
+     * @Description 使用类似shell的方式执行命令 每个命令之间可以有关联 会自动增加exit命令
+     * @param cmds
+     * @return java.util.List<execute.cmd.CmdRes>
+     * @Date 2019/10/28 23:14
+     * @Author wangyl
+     * @Version V1.0
+     */
+    public List<CmdRes> executeCmdsLikeShell(List<String> cmds) throws IOException, IllegalAccessException, IntrospectionException, InvocationTargetException {
         this.openConnection();
         session.requestDumbPTY();
         session.startShell();
@@ -179,23 +191,36 @@ public class RemoteCmd {
         InputStream outInfo = session.getStdout();
         BufferedReader buffer = new BufferedReader(new InputStreamReader(outInfo));
         String outInfoLine = "";
-        List<CmdRes> cmdRes = new ArrayList<>();
+        List<CmdRes> cmdResList = new ArrayList<>();
         int cmdsSize = cmds.size();
-        for (int i=0;i<cmdsSize;i++) {
+        if (!Constant.EXIT.equals(cmds.get(cmdsSize - 1))) {
+            cmds.add(Constant.EXIT);
+        }
+        for (int i = 0; i < cmds.size(); i++) {
+            if (debug) {
+                System.out.println(cmds.get(i));
+            }
             pw.println(cmds.get(i));
             pw.flush();
+            List<String> outInfoList = new ArrayList<>();
             while (true) {
                 if ((outInfoLine = buffer.readLine()) == null || outInfoLine.endsWith("]# ")) {
                     break;
                 }
-                System.out.println(outInfoLine);
+                if (debug) {
+                    System.out.println(outInfoLine);
+                }
+                outInfoList.add(outInfoLine);
             }
-            session.getExitStatus();
+            CmdRes cmdRes = CmdRes.builder().cmd(cmds.get(i)).outInfo(outInfoList).cmdExecuteStatue(session.getExitStatus()).build();
+            cmdResList.add(cmdRes);
+            if (debug) {
+                IOTools.TOOLS.printClassObjectInfo(cmdRes);
+            }
         }
         pw.close();
-        return null;
+        return cmdResList;
     }
-
 
     /**
      * @Description 开启连接
@@ -216,6 +241,12 @@ public class RemoteCmd {
         session = conn.openSession();
     }
 
+    @Override
+    public void finalize() throws Throwable {
+        super.finalize();
+        conn.close();
+        conn=null;
+    }
 }
 
 @Data

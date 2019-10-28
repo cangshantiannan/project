@@ -1,21 +1,11 @@
 package test;
 
-import ch.ethz.ssh2.Connection;
-import ch.ethz.ssh2.Session;
-import ch.ethz.ssh2.StreamGobbler;
-import com.sun.imageio.plugins.common.I18N;
-import execute.cmd.CmdRes;
 import execute.cmd.RemoteCmd;
-import until.IOTools;
 
 import java.beans.IntrospectionException;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Basic {
@@ -49,9 +39,13 @@ public class Basic {
 //            e.printStackTrace(System.err);
 //            System.exit(2);
 //        }
+        List<String> cmds= new ArrayList<>();
+        cmds.add("ls");
+        cmds.add("pwd");
         RemoteCmd remotecmd = new RemoteCmd(hostname, username, password);
         remotecmd.setDebug(true);
-        remotecmd.cmdsLikeShell();
+        remotecmd.executeCmdsLikeShell(cmds);
+
 ////        remotecmd.ExecuteCmd("ls");
 ////        remotecmd.ExecuteCmd("ls -a");
 //        List<String> cmds= new ArrayList<>();
